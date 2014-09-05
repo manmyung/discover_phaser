@@ -1,16 +1,6 @@
-var mainState = {
-	
-    preload: function () {
-        game.load.image('player', 'assets/player.png');
-        game.load.image('wallV', 'assets/wallVertical.png');
-        game.load.image('wallH', 'assets/wallHorizontal.png');
-        game.load.image('coin', 'assets/coin.png');  
-        game.load.image('enemy', 'assets/enemy.png');
-	},
+var playState = {
     
 	create: function () {
-        game.stage.backgroundColor = '#3498db';
-        game.physics.startSystem(Phaser.Physics.ARCADE);
         this.cursor = game.input.keyboard.createCursorKeys();
 
         this.player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
@@ -27,7 +17,7 @@ var mainState = {
         this.coin.anchor.setTo(0.5, 0.5);
         
         this.scoreLabel = game.add.text(30, 30, 'score: 0', {font: '18px Arial', fill: '#ffffff' });
-        this.score = 0;
+        game.global.score = 0;
         
         this.createWorld();
         game.time.events.loop(2200, this.addEnemy, this);
@@ -63,8 +53,8 @@ var mainState = {
     },
     
     takeCoin: function(player, coin) {
-        this.score += 5;
-        this.scoreLabel.text = 'score: ' + this.score;
+        game.global.score += 5;
+        this.scoreLabel.text = 'score: ' + game.global.score;
         
         this.updateCoinPosition();
     },
@@ -123,11 +113,6 @@ var mainState = {
     },
     
     playerDie: function() {
-        game.state.start('main');
+        game.state.start('menu');
     },
 };
-
-var game = new Phaser.Game(500, 340, Phaser.AUTO, 'gameDiv');      
-
-game.state.add('main', mainState);
-game.state.start('main');
