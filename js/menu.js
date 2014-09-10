@@ -5,7 +5,7 @@ var menuState = {
         game.add.image(0, 0, 'background');
         
         // Display the name of the game
-        var nameLabel = game.add.text(game.world.centerX, -50, 'Super Coin Box', { font: '50px Arial', fill: '#ffffff' });
+        var nameLabel = game.add.text(game.world.centerX, -50, 'Super Coin Box', { font: '70px Geo', fill: '#ffffff' });
         nameLabel.anchor.setTo(0.5, 0.5);
         game.add.tween(nameLabel).to({y: 80}, 1000).easing(Phaser.Easing.Bounce.Out)
           .start();
@@ -37,10 +37,30 @@ var menuState = {
               
         // When the 'upKey' is pressed, it will call the 'start' function once
         upKey.onDown.addOnce(this.start, this); 
+        
+        // Add the mute button that calls the 'toggleSound' function when pressed
+        this.muteButton = game.add.button(20, 20, 'mute', this.toggleSound, this);
+        // If the mouse is over the button, it becomes a hand cursor
+        this.muteButton.input.useHandCursor = true;
+        
+        // If the game is already muted
+        if (game.sound.mute) {
+            // Change the frame to display the speaker with no sound 
+            this.muteButton.frame = 1;
+        }
     },
 
     start: function() {
         // Start the actual game 
         game.state.start('play');
+    },
+    
+    // Function called when the 'muteButton' is pressed
+    toggleSound: function() {
+        // Switch the Phaser sound variable from true to false, or false to true 
+        // When    'game.sound.mute = true', Phaser will mute the game 
+        game.sound.mute = ! game.sound.mute;
+        // Change the frame of the button
+        this.muteButton.frame = game.sound.mute ? 1 : 0; 
     },
 };

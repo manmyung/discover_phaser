@@ -24,6 +24,8 @@ var loadState = {
         game.load.audio('dead', ['assets/dead.ogg', 'assets/dead.mp3']);
         
         game.load.image('pixel', 'assets/pixel.png');
+        
+        game.load.spritesheet('mute', 'assets/muteButton.png', 28, 22);
     },
     
     create: function() {
