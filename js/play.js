@@ -4,6 +4,9 @@ var playState = {
         this.cursor = game.input.keyboard.createCursorKeys();
 
         this.player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
+        this.player.animations.add('right', [1, 2], 8, true);
+        this.player.animations.add('left', [3, 4], 8, true);
+        
         this.player.anchor.setTo(0.5, 0.5);
         game.physics.arcade.enable(this.player);
         this.player.body.gravity.y = 500;
@@ -20,7 +23,27 @@ var playState = {
         game.global.score = 0;
         
         this.createWorld();
-        game.time.events.loop(2200, this.addEnemy, this);
+        
+        // Contains the time of the next enemy creation    
+        this.nextEnemy = 0;
+
+        this.jumpSound = game.add.audio('jump'); 
+        this.jumpSound.volume = 0.7;
+        this.coinSound = game.add.audio('coin'); 
+        this.deadSound = game.add.audio('dead');
+        
+        // Create the emitter with 15 particles. We don't need to set the x and y 
+        // Since we don't know where to do the explosion yet
+        this.emitter = game.add.emitter(0, 0, 15);
+        // Set the 'pixel' image for the particles
+        this.emitter.makeParticles('pixel');
+        // Set the y speed of the particles between -150 and 150
+        // The speed will be randomly picked between -150 and 150 for each particle 
+        this.emitter.setYSpeed(-150, 150);
+        // Do the same for the x speed
+        this.emitter.setXSpeed(-150, 150); 
+        // Use no gravity for the particles
+        this.emitter.gravity = 0;
     },
     
 	update: function () {
@@ -34,21 +57,41 @@ var playState = {
         if (!this.player.inWorld) { 
             this.playerDie();
         }
+        
+        // If the 'nextEnemy' time has passed
+        if (this.nextEnemy < game.time.now) { 
+            // Define our variables
+            var start = 4000, end = 1000, score = 100;
+            
+            // Formula to decrease the delay between enemies over time
+            // At first it's 4000ms, then slowly goes to 1000ms
+            var delay = Math.max(start - (start-end)*game.global.score/score, end);
+            
+            // Create a new enemy, and update the 'nextEnemy' time
+            this.addEnemy();
+            this.nextEnemy = game.time.now + delay; 
+        }
     },
     
     movePlayer: function () {
         if (this.cursor.left.isDown) {
             this.player.body.velocity.x = -200;
+            this.player.animations.play('left'); 
         }
         else if (this.cursor.right.isDown) {
             this.player.body.velocity.x = 200;
+            this.player.animations.play('right');
         }
         else {
             this.player.body.velocity.x = 0;
+            this.player.animations.stop();
+            this.player.frame = 0;
         }
         
         if (this.cursor.up.isDown && this.player.body.touching.down) {
             this.player.body.velocity.y = -320;
+            
+            this.jumpSound.play();
         }
     },
     
@@ -57,6 +100,13 @@ var playState = {
         this.scoreLabel.text = 'score: ' + game.global.score;
         
         this.updateCoinPosition();
+        
+        this.coinSound.play();
+        
+        this.coin.scale.setTo(0, 0);
+        game.add.tween(this.coin.scale).to({x: 1, y: 1}, 300).start();
+        
+        game.add.tween(this.player.scale).to({x: 1.3, y: 1.3}, 50).to({x: 1, y: 1}, 150) .start();
     },
     
     updateCoinPosition: function() {
@@ -112,7 +162,24 @@ var playState = {
         this.walls.setAll('body.immovable', true); 
     },
     
-    playerDie: function() {
+    startMenu: function() { 
         game.state.start('menu');
+    },
+    playerDie: function() {
+        // If the player is already dead, do nothing 
+        if (!this.player.alive) {
+            return; 
+        }
+        this.player.kill();
+        
+        this.deadSound.play();
+        
+        // Set the position of the emitter on the player
+        this.emitter.x = this.player.x; 
+        this.emitter.y = this.player.y;
+        // Start the emitter, by exploding 15 particles that will live for 600ms
+        this.emitter.start(true, 600, null, 15);
+        
+        game.time.events.add(1000, this.startMenu, this);
     },
 };
